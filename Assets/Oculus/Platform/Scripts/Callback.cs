@@ -70,13 +70,6 @@ namespace Oculus.Platform
         HandleMessage(msg);
       }
     }
-
-    internal static void OnApplicationQuit()
-    {
-      // Clear out all outstanding callbacks
-      requestIDsToCallbacks.Clear();
-      notificationCallbacks.Clear();
-    }
     #endregion
 
     #region Callback Internals
