@@ -6,77 +6,103 @@ using UnityEngine;
 public class CustomAudio : MonoBehaviour
 {
     [SerializeField]
-    private AudioClip sound;
+    protected AudioClip sound;
 
     [SerializeField]
-    private AudioSource source;
+    protected AudioSource source;
 
     [SerializeField]
-    private Camera _camera;
+    protected Camera _camera;
 
     [SerializeField]
-    private ScannerEffectDemo scannerEffect;
+    protected ScannerEffectDemo scannerEffect;
 
-    private void Awake()
+    [SerializeField]
+    protected Transform player;
+
+    [SerializeField]
+    protected AnimationCurve audioSourceCurve;
+
+    protected void Awake()
     {
         if (this.source == null)
             this.source = this.GetComponent<AudioSource>();
+
+        if (this.player == null)
+            this.player = GameObject.FindGameObjectWithTag("Player").transform;
+
+        if (this._camera == null)
+            this._camera = GameObject.FindGameObjectWithTag("OVR Camera").GetComponent<Camera>();
+
+        this.audioSourceCurve = this.source.GetCustomCurve(AudioSourceCurveType.CustomRolloff);
     }
 
-    [SerializeField]
-    private bool isBeingPlayed = false;
-
     // Start is called before the first frame update
-    void Start()
+    protected void Start()
     {
         this.scannerEffect = this._camera.gameObject.AddComponent<ScannerEffectDemo>();
         this.scannerEffect.EffectMaterial = Resources.Load<Material>("ScannerEffect");
-        Debug.Log(this.scannerEffect.EffectMaterial);
         this.scannerEffect.ScannerOrigin = this.transform;
-        
-
         this.source.clip = sound;
-
-
-
-
-     //   this.sound.PCMReaderCallback = myFunc;
     }
 
-    private void myFunc(float[] data)
-    {
-        throw new NotImplementedException();
-    }
 
     // Update is called once per frame
-    void Update()
+    private void Update()
     {
         if (Input.GetKeyDown(KeyCode.P))
-            PlaySound();
-
-
-        if (this.isBeingPlayed)
-        {         
-
-
-
-        }
+        {
+            this.Play();
+        }   
     }
 
-    private void PlaySound()
+    public void Play()
     {
-        PlayVibration();
+        if (this.source.isPlaying)
+            return;
+
         this.source.Play();
         this.scannerEffect.Play();
+        StartCoroutine(SynchronizeVibration(0.01f));
     }
 
-    private void PlayVibration()
-    {
-        OVRHapticsClip vibration = new OVRHapticsClip(this.sound);
-        OVRHaptics.LeftChannel.Preempt(vibration);
-        
-       // OVRHaptics.LeftChannel.Mix()
 
-//        vibration.
+    protected IEnumerator SynchronizeVibration(float seconds)
+    {
+        while (this.source.isPlaying)
+        {
+            int sampleRate = (int)(source.clip.frequency * seconds);            
+
+            float[] samples = new float[sampleRate * this.sound.channels];
+
+            //Debug.Log(samples.Length + " " + this.sound.channels);
+            this.source.GetOutputData(samples, this.sound.channels);
+
+            // calculate spatialized volume
+            float distanceFromSourceToPlayer = Vector3.Distance(this.source.transform.position, this.player.position);
+            float distanceFromSourceToPlayerNormalized = Mathf.InverseLerp(this.source.minDistance, this.source.maxDistance, distanceFromSourceToPlayer);
+            float spatializedVolume = audioSourceCurve.Evaluate(distanceFromSourceToPlayerNormalized);
+
+            // multiply each audio sample by calculated volume
+            //for (int i = 0; i < samples.Length; i++)
+            //{
+            //    samples[i] *= spatializedVolume * this.source.volume;
+            //}
+            // maybe we don't need it
+
+            AudioClip audioSection = AudioClip.Create("portion", samples.Length, source.clip.channels, source.clip.frequency, false);
+            audioSection.SetData(samples, 0);
+
+
+            // multiply by 
+            OVRHapticsClip vibration = new OVRHapticsClip(audioSection);
+            OVRHaptics.LeftChannel.Mix(vibration);
+            OVRHaptics.RightChannel.Mix(vibration);
+
+            //Debug.Log($"Distance To Player : {distanceFromSourceToPlayer} | Spatialized volume : {spatializedVolume} | Samples : {samples.Length}");
+
+
+            yield return new WaitForSecondsRealtime(seconds);
+        }
     }
 }

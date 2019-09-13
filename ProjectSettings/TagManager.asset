@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Cane
   - Cane Trigger Point
+  - OVR Camera
   layers:
   - Default
   - TransparentFX
