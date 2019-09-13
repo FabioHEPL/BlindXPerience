@@ -23,6 +23,9 @@ public class CustomAudio : MonoBehaviour
             this.source = this.GetComponent<AudioSource>();
     }
 
+    [SerializeField]
+    private bool isBeingPlayed = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -33,6 +36,16 @@ public class CustomAudio : MonoBehaviour
         
 
         this.source.clip = sound;
+
+
+
+
+     //   this.sound.PCMReaderCallback = myFunc;
+    }
+
+    private void myFunc(float[] data)
+    {
+        throw new NotImplementedException();
     }
 
     // Update is called once per frame
@@ -40,15 +53,30 @@ public class CustomAudio : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.P))
             PlaySound();
+
+
+        if (this.isBeingPlayed)
+        {         
+
+
+
+        }
     }
 
     private void PlaySound()
     {
-        OVRHapticsClip vibration = new OVRHapticsClip(this.sound);
-        OVRHaptics.LeftChannel.Preempt(vibration);
-
-
+        PlayVibration();
         this.source.Play();
         this.scannerEffect.Play();
+    }
+
+    private void PlayVibration()
+    {
+        OVRHapticsClip vibration = new OVRHapticsClip(this.sound);
+        OVRHaptics.LeftChannel.Preempt(vibration);
+        
+       // OVRHaptics.LeftChannel.Mix()
+
+//        vibration.
     }
 }

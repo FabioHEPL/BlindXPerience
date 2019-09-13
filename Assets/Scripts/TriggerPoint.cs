@@ -64,6 +64,4 @@ public class TriggerPoint : MonoBehaviour
     {
         TriggerEnter?.Invoke(other);
     }
-
-
 }
