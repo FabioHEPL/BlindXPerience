@@ -6,13 +6,13 @@ using UnityEngine.Rendering;
 public class ScannerEffectDemo : MonoBehaviour
 {
     [SerializeField]
-    private float speed = 50;
+    public float speed = 50;
     public Transform ScannerOrigin;
     public Material EffectMaterial;
     public float ScanDistance;
 
     [SerializeField]
-    private float maxDistance = 50;
+    public float maxDistance = 50;
 
     private Camera _camera;
 

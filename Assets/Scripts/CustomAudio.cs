@@ -43,6 +43,9 @@ public class CustomAudio : MonoBehaviour
         this.scannerEffect = this._camera.gameObject.AddComponent<ScannerEffectDemo>();
         this.scannerEffect.EffectMaterial = Resources.Load<Material>("ScannerEffect");
         this.scannerEffect.ScannerOrigin = this.transform;
+        this.scannerEffect.speed = 2.5f;
+        this.scannerEffect.maxDistance = 7f;
+
         this.source.clip = sound;
     }
 
